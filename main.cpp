@@ -17,7 +17,7 @@ int main(){
   cout << ProbSelect(multi) << endl;
 
 
-
+  cout << gennor(1,1) << endl;
 
 
 

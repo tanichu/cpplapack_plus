@@ -1,2 +1,43 @@
 cpplapack_plus is an supportive functions 
 used in my research programs 
+
+!!requirement
+
+* cpplapack 
+  (linear algebra)
+http://cpplapack.sourceforge.net/
+http://tanichu.com/lecture/technological/cpplapack%E3%81%AE%E5%B0%8E%E5%85%A5%E6%B3%95
+
+cpplapack requires lapack.
+The installation procedure depends on your distribution.
+Mac OSX has already had lapack.
+Ubuntu or other linux distribution can get lapack through
+package manager easily.
+
+cpplapack.h and realtive dirs should be copied to 
+/usr/include/
+
+when you link your object files you need
+
+-llapack
+
+-lblas
+
+is also required.
+
+
+*randlib
+http://www.mlab.ice.uec.ac.jp/~ej-sib/numerical/numerical_random.html
+
+what you shoud do is as followings
+
+% cd randlibc
+% gcc -O2 -c ./source/randlib.c/src/linpack.c
+% gcc -O2 -c ./source/randlib.c/src/com.c
+% gcc -O2 -c ./source/randlib.c/src/randlib.c
+% ar cr librandlibc.a linpack.o com.o randlib.o
+% ranlib librandlibc.a
+
+rendlib.h -> /usr/include/
+librandlibc.a -> /usr/lib/
+

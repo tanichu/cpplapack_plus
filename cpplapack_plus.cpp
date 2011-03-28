@@ -146,6 +146,7 @@ vector< vector<string> > ssv_reader(const char *filename){
 
 void scatter(){
       srand( (unsigned)time( NULL ) );
+      setall(rand(),rand());
 }
 
 

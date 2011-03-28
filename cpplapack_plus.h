@@ -16,6 +16,8 @@
 #include <iostream>
 
 #include <cpplapack.h>//cpplapack
+#include <randlib.h> // randlib
+
 
 #include <time.h>//時間関数利用　乱数初期化など
 //#include <conio.h>//コンソールで一時止めるgetch()を利用するため
