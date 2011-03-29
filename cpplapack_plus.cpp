@@ -87,15 +87,15 @@ string DelTillComma(string str){
 
 
 vector<string> split(const string& str, const string& delimiter) {
-    // delimiter(2 �����ȏ����) ���󔒂ɒu��
+    // delimiter(2 文字以上も可) を空白に置換
     std::string item(str);    
     for(unsigned pos = item.find(delimiter); pos != string::npos; pos = item.find(delimiter, pos)) {
         item.replace(pos, delimiter.size(), " ");
     }
-    // ����
+    // 分解
     stringstream buf(item);
 
-    // �ǂݎ��
+    // 読み取り
     std::vector<string> result;
     while(buf >> item) {
         result.push_back(item);
@@ -105,14 +105,14 @@ vector<string> split(const string& str, const string& delimiter) {
 }
 
 
-//csv��ǂݎ��D
+//csvを読み取る．
 vector< vector<string> > csv_reader(const char *filename){
 	char ch[10000];
 	string str;
 	ifstream fin(filename);
 	vector< vector<string> > csv;
 
-	while(fin.getline(ch,10000)){//�f�[�^�̓ǂݍ���
+	while(fin.getline(ch,10000)){//データの読み込み
 		str = ch;
 		vector<string> strs;
 		strs = split(str,",");
@@ -123,14 +123,14 @@ vector< vector<string> > csv_reader(const char *filename){
 	return csv;
 }
 
-//ssv��ǂݎ��Dspace separated value
+//ssvを読み取る．space separated value
 vector< vector<string> > ssv_reader(const char *filename){
 	char ch[10000];
 	string str;
 	ifstream fin(filename);
 	vector< vector<string> > csv;
 
-	while(fin.getline(ch,10000)){//�f�[�^�̓ǂݍ���
+	while(fin.getline(ch,10000)){//データの読み込み
 		str = ch;
 		vector<string> strs;
 		strs = split(str," ");
@@ -142,7 +142,7 @@ vector< vector<string> > ssv_reader(const char *filename){
 }	
 
 	
-///��suplapack
+///元suplapack
 
 void scatter(){
       srand( (unsigned)time( NULL ) );
@@ -312,12 +312,12 @@ double trace(dgematrix A){
                 }
         }
         else{
-               cout << "�����s��łȂ��̂Ńg���[�X���Ƃ�܂���"<<endl;
+               cout << "正方行列でないのでトレースをとれません"<<endl;
         }
         return trace;
 }
 
-void read_multi_vector(dcovector *x,int num, int dim, char *filename){//��s10000�o�C�g�܂łł��D
+void read_multi_vector(dcovector *x,int num, int dim, char *filename){//一行10000バイトまでです．
 	ifstream fin(filename);
 
 	char ch[10000];
@@ -337,7 +337,7 @@ void read_multi_vector(dcovector *x,int num, int dim, char *filename){//��s1000
 
 	fin.close();
 }
-void read_multi_vector(drovector *x,int num, int dim, char *filename){//��s10000�o�C�g�܂łł��D
+void read_multi_vector(drovector *x,int num, int dim, char *filename){//一行10000バイトまでです．
 	ifstream fin(filename);
 
 	char ch[10000];
@@ -691,4 +691,269 @@ drovector rovec_read(dgematrix A, int k){
     v(i) = A(k,i);
   }
   return v;
+}
+
+
+
+/// Hamahata procedres
+
+
+
+
+//--------------------------------------------------------
+//-------------------------関数----------------------------
+//--------------------------------------------------------
+//行列の指定した列に列ベクトルを挿入
+dgematrix Insert_mat(dgematrix mat,int col,dcovector vec)
+{
+	for(int i=0;i<(vec.l);i++)
+		mat(i,col) = vec(i);
+    
+	return(mat);
+}
+
+//行列の中の指定した列ベクトルを抜き出す
+dcovector Extract_vec(dgematrix mat,int col)
+{
+	dcovector x(mat.m);
+	
+	for(int i=0;i<mat.m;i++)
+		x(i) = mat(i,col);
+    
+	return(x);
+}
+
+//ベクトルのノルムを計算する
+double Cal_norm(dcovector vec)
+{
+	double ans=0;
+	for(int h=0;h<vec.l;h++)
+		ans += pow(vec(h),2.0);
+    
+	return(pow(ans,0.5));
+}
+
+//行列にベクトルを挿入して足し合わせる
+dgematrix InsertAdd_VecToMat(dgematrix mat,int col,dcovector vec)
+{
+	for(int i=0;i<(vec.l);i++)
+		mat(i,col) += vec(i);
+	
+	return(mat);
+}
+
+
+//正則行列かどうかのチェック（正則なら0を返す）
+//正則行列かどうかのチェック（正則なら0を返す）
+int check_Regularization(dgematrix mat)
+{
+	std::vector<double> wr,wi;
+	mat.dgeev(wr,wi);
+	for(int i=0;i<mat.m;i++)
+		if(wr[i] < 0)
+			return(1);
+	
+	return(0);
+}
+
+
+//多次元正規分布の尤度を計算
+double Cal_MultiNormLikely(dcovector x,dcovector mu,dgematrix sig)
+{
+	dcovector y = x - mu;
+	double tmp1,tmp2;
+	double ans;
+	
+	tmp1 = pow(pow(2.0*PI,double(y.l)),0.5) * pow(det(sig),0.5);
+	
+	tmp2 = -0.5 * CPPL::t(y) * CPPL::i(sig) * y;
+	
+	ans = exp(tmp2) / tmp1;
+	if(ans == 0)
+		ans = 1.0 / pow(10.0,100.0);
+	
+	return(ans);
+}
+
+//コレスキー分解
+dgematrix cholesky(dgematrix mat)
+{
+	dgematrix L = mat;
+	double tmp;
+	L.zero();
+	
+	for(int i=0;i<mat.m;i++)
+    {
+		//i>jの計算
+		for(int j=0;j<i;j++)
+        {
+			tmp = mat(i,j);
+			for(int k=0;k<j;k++)
+				tmp -= L(i,k) * L(j,k);
+			
+			L(i,j) = tmp / L(j,j);
+        }
+		//i=jの計算
+		tmp = mat(i,i);
+		for(int k=0;k<i;k++)
+			tmp -= L(i,k) * L(i,k);
+		
+		L(i,i) = sqrt(tmp);
+    }
+	
+	return(L);
+}
+
+
+
+
+//サンプリング関連
+
+//１次元ガウス分布からサンプリング
+double SingleGaussSampler(double mu,double sig)
+{
+	double x1 = double(rand()+1.0)/(RAND_MAX +1.0);
+	double x2 = double(rand()+1.0)/(RAND_MAX +1.0);
+	
+	double y = sqrt(-2*log(x1))*cos(2.0*M_PI*x2) ;
+	
+	return(mu + sig * y);
+}
+//1次元逆ガンマ分布からサンプリング
+double SingleInvGammaSampler(double kappa,double lambda)
+{
+	return(1.0 / gengam(kappa,lambda));
+}
+
+
+//平均ベクトルと分散共分散行列に基づく多次元ガウス分布からサンプリング
+dcovector MultiGaussSampler(dcovector Mu,dgematrix Sig)
+{
+	double r1,r2;
+	dcovector value(Mu.l);
+	dgematrix L = Sig;
+	double tmp=0;
+	
+	for(int i=0;i<Mu.l;i++)
+    {
+		r1 = double(rand()+1.0)/(RAND_MAX+1.0);
+		r2 = double(rand()+1.0)/(RAND_MAX+1.0);
+		
+		value(i) = sqrt(-2 * log(r1))*cos(2.0*PI*r2);
+    }
+	
+	L.zero();
+	for(int i=0;i<Mu.l;i++)
+    {
+		//i>jの計算
+		for(int j=0;j<i;j++)
+        {
+			tmp = Sig(i,j);
+			for(int k=0;k<j;k++)
+				tmp -= L(i,k) * L(j,k);
+			
+			L(i,j) = tmp / L(j,j);
+        }
+		//i=jの計算
+		tmp = Sig(i,i);
+		for(int k=0;k<i;k++)
+			tmp -= L(i,k) * L(i,k);
+		
+		L(i,i) = sqrt(tmp);
+    }
+	
+	value = (L*value + Mu);
+	
+	return(value);
+}
+
+//確率を要素とする多項分布からサンプリング
+int MultiNominalSampler(dcovector v)
+{
+	dcovector pr = v;
+	double t = 0.0;
+	double sum = 0;
+	
+	for(int i=0;i<v.l;i++)
+    {
+		sum += v(i);
+    }
+	pr *= (1.0/sum);
+	t = double(rand())/(double(RAND_MAX) + 1.0);
+	
+	int k =0;
+	for(int i=0;i<v.l;i++){
+		if(t>=0){
+			t=t-pr(i);
+			if(t<0){k=i;}
+		}
+	}
+	return k;
+}
+
+//Dirichlet分布からサンプリング
+dcovector DirichletSampler(dcovector vec)
+{
+	dcovector theta(vec.l);theta.zero();
+	double sum=0;
+	
+	for(int i=0;i<vec.l;i++)
+    {
+		if(vec(i) != 0)
+			theta(i) = gengam(1.0,vec(i));
+		else
+			theta(i) = 0;
+		sum += theta(i);
+    }
+	
+	for(int i=0;i<vec.l;i++)
+		theta(i) = theta(i) / sum;
+	
+	return(theta);
+}
+
+//2項分布からサンプリング
+int BinominalSampler(int n,double p)
+{
+	dcovector x(2);
+	x(0) = p;
+	x(1) = 1.0 - p;
+	
+	int a=0;
+	for(int i=0;i<n;i++)
+		if(0 == MultiNominalSampler(x))
+			a++;
+	
+	return(a);
+}
+
+//逆Wishart分布からサンプリング
+//パラメータは自由度n,精度行列S
+//入力を分散投入に変更2010/10/06taniguchi
+dgematrix IWishartSampler(double n,dgematrix S)
+{
+	//S = CPPL::i(S); //precision to covariance
+	dgematrix z(S.m,S.m);z.zero();
+	dcovector c(S.m);c.zero();
+	dgematrix R(S.m,S.m);R.zero();
+	
+	for(int i=0;i<S.m;i++)
+		for(int j=0;j<S.m;j++)
+			z(i,j) = gennor(0,1);
+	
+	for(int i=0;i<S.m;i++)
+		c(i) = genchi(n-(double)i);
+	
+	for(int i=0;i<S.m;i++)
+		for(int j=i;j<S.m;j++)
+		{
+			if(i == j)
+				R(j,i) = pow(c(i),0.5);
+			else
+				R(j,i) = z(j,i);
+		}
+	dgematrix X = R*CPPL::t(R);
+	dgematrix C = cholesky(S);
+	dgematrix D = CPPL::t(C) * X * C;
+	return (CPPL::i(D));
 }

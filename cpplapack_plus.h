@@ -8,7 +8,7 @@
 #define CSV_STRING vector< vector< string > >
 #define _USE_MATH_DEFINES 
 	
-	
+#define PI 3.141592	
 #include <string>
 #include <vector>
 #include <sstream>
@@ -19,34 +19,34 @@
 #include <randlib.h> // randlib
 
 
-#include <time.h>//ŠÔŠÖ”—˜—p@—”‰Šú‰»‚È‚Ç
-//#include <conio.h>//ƒRƒ“ƒ\[ƒ‹‚Åˆê~‚ß‚égetch()‚ğ—˜—p‚·‚é‚½‚ß
-#include <math.h>//”ŠwŠÖ”
-#include <string.h>//•¶š—ñˆ——p‚ÌƒNƒ‰ƒXstring—˜—p‚Ì‚½‚ß
-#include <fstream>//ƒtƒ@ƒCƒ‹ƒXƒgƒŠ[ƒ€
+#include <time.h>//æ™‚é–“é–¢æ•°åˆ©ç”¨ã€€ä¹±æ•°åˆæœŸåŒ–ãªã©
+//#include <conio.h>//ã‚³ãƒ³ã‚½ãƒ¼ãƒ«ã§ä¸€æ™‚æ­¢ã‚ã‚‹getch()ã‚’åˆ©ç”¨ã™ã‚‹ãŸã‚
+#include <math.h>//æ•°å­¦é–¢æ•°
+#include <string.h>//æ–‡å­—åˆ—å‡¦ç†ç”¨ã®ã‚¯ãƒ©ã‚¹stringåˆ©ç”¨ã®ãŸã‚
+#include <fstream>//ãƒ•ã‚¡ã‚¤ãƒ«ã‚¹ãƒˆãƒªãƒ¼ãƒ 
 using namespace std;
 using namespace CPPL;
 
-//©ì‚Ì•¶š—ñ•ÏŠ·—p
+//è‡ªä½œã®æ–‡å­—åˆ—å¤‰æ›ç”¨
 std::string itos(int n); // int -> string
 std::string ftos(double n);// float,double -> string
-string TrimRight( string arg ); //string ‚Ì‰E‘¤‚ÌƒXƒy[ƒX‚È‚Ç‚ğ‚Æ‚éD
-string TrimLeft( string arg );//string ‚Ì¶‘¤‚ÌƒXƒy[ƒX‚È‚Ç‚ğ‚Æ‚éD
-string Trim( string arg);//string ‚Ì—¼‘¤‚ÌƒXƒy[ƒX‚È‚Ç‚ğ‚Æ‚éD
+string TrimRight( string arg ); //string ã®å³å´ã®ã‚¹ãƒšãƒ¼ã‚¹ãªã©ã‚’ã¨ã‚‹ï¼
+string TrimLeft( string arg );//string ã®å·¦å´ã®ã‚¹ãƒšãƒ¼ã‚¹ãªã©ã‚’ã¨ã‚‹ï¼
+string Trim( string arg);//string ã®ä¸¡å´ã®ã‚¹ãƒšãƒ¼ã‚¹ãªã©ã‚’ã¨ã‚‹ï¼
 
-string ScanTillRet(string str); // Return–˜‚Ì•¶š—ñ‚ğæ“¾
-string ScanTillSpace(string str); // space–˜‚Ì•¶š—ñ‚ğæ“¾
-string ScanTillTab(string str); // tab–˜‚Ì•¶š—ñ‚ğæ“¾
-string ScanTillComma(string str);// comma–˜‚Ì•¶š—ñ‚ğæ“¾
-string DelTillRet(string str);// Return–˜‚Ì•¶š—ñ‚ğÁ‹
-string DelTillSpace(string str);// space–˜‚Ì•¶š—ñ‚ğÁ‹
-string DelTillTab(string str);// Return–˜‚Ì•¶š—ñ‚ğÁ‹
-string DelTillComma(string str);// Return–˜‚Ì•¶š—ñ‚ğÁ‹
+string ScanTillRet(string str); // Returnè¿„ã®æ–‡å­—åˆ—ã‚’å–å¾—
+string ScanTillSpace(string str); // spaceè¿„ã®æ–‡å­—åˆ—ã‚’å–å¾—
+string ScanTillTab(string str); // tabè¿„ã®æ–‡å­—åˆ—ã‚’å–å¾—
+string ScanTillComma(string str);// commaè¿„ã®æ–‡å­—åˆ—ã‚’å–å¾—
+string DelTillRet(string str);// Returnè¿„ã®æ–‡å­—åˆ—ã‚’æ¶ˆå»
+string DelTillSpace(string str);// spaceè¿„ã®æ–‡å­—åˆ—ã‚’æ¶ˆå»
+string DelTillTab(string str);// Returnè¿„ã®æ–‡å­—åˆ—ã‚’æ¶ˆå»
+string DelTillComma(string str);// Returnè¿„ã®æ–‡å­—åˆ—ã‚’æ¶ˆå»
 
-//‘¼‚É‚àƒfƒtƒHƒ‹ƒg‚Å
+//ä»–ã«ã‚‚ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã§
 // atof // string -> float
 // atoi // string -> int
-//‚ª‘¶İ‚µ‚Ü‚·D”š‚Æ•¶š—ñ‚Ì‘ŠŒİ•ÏŠ·‚Ég‚Á‚Ä‚­‚¾‚³‚¢D
+//ãŒå­˜åœ¨ã—ã¾ã™ï¼æ•°å­—ã¨æ–‡å­—åˆ—ã®ç›¸äº’å¤‰æ›ã«ä½¿ã£ã¦ãã ã•ã„ï¼
 
 //void DEBUG_TRACE(string x);
 vector<string> split(const string& str, const string& delimiter);
@@ -57,78 +57,78 @@ vector< vector<string> > ssv_reader(const char *filename);
 
 
 
-double gauss_rand(); //•ªU‚P•½‹Ï‚O‚ÌƒKƒEƒX—”‚ğ”­¶
-double gauss_rand(double ave,double sig);//•½‹Ïave,•W€•Î·sig‚ÌƒKƒEƒX—”‚ğ”­¶
-dcovector gauss_rand(dcovector ave,double sig);//ƒxƒNƒgƒ‹‚Å•½‹Ïave,‘SŸŒ³“Æ—§‚Å•Î·sig‚ÌƒKƒEƒX—”
-dcovector gauss_rand(dcovector ave,dcovector sig);//ƒxƒNƒgƒ‹‚Å•½‹Ïave,‘SŸŒ³“Æ—§‚ÅŠeŸŒ³•Î·sig‚ÌƒKƒEƒX—”
-dgematrix gauss_rand(dgematrix ave,double sig);//s—ñ‚ÌŠe¬•ª‚É•Î·sig‚Ì—”‚ğÚ‚¹‚é
+double gauss_rand(); //åˆ†æ•£ï¼‘å¹³å‡ï¼ã®ã‚¬ã‚¦ã‚¹ä¹±æ•°ã‚’ç™ºç”Ÿ
+double gauss_rand(double ave,double sig);//å¹³å‡ave,æ¨™æº–åå·®sigã®ã‚¬ã‚¦ã‚¹ä¹±æ•°ã‚’ç™ºç”Ÿ
+dcovector gauss_rand(dcovector ave,double sig);//ãƒ™ã‚¯ãƒˆãƒ«ã§å¹³å‡ave,å…¨æ¬¡å…ƒç‹¬ç«‹ã§åå·®sigã®ã‚¬ã‚¦ã‚¹ä¹±æ•°
+dcovector gauss_rand(dcovector ave,dcovector sig);//ãƒ™ã‚¯ãƒˆãƒ«ã§å¹³å‡ave,å…¨æ¬¡å…ƒç‹¬ç«‹ã§å„æ¬¡å…ƒåå·®sigã®ã‚¬ã‚¦ã‚¹ä¹±æ•°
+dgematrix gauss_rand(dgematrix ave,double sig);//è¡Œåˆ—ã®å„æˆåˆ†ã«åå·®sigã®ä¹±æ•°ã‚’è¼‰ã›ã‚‹
 
-double LGF(dcovector x,dcovector m,dcovector s);//‘Î”‰»‚µ‚½ƒKƒEƒXŠÖ”C’†SmCŠeŸŒ³“Æ—§‚Å•W€•Î·s‚ÌƒKƒEƒXŠÖ”‚ğlog‚É“ü‚ê‚½‚à‚ÌDƒKƒEƒXŠÖ”‚Ì‚©‚¯Z‚ğ‚â‚éÛ‚È‚Ç‚ÉC‘Î”‹óŠÔ“à‚Å˜aZ‚Å‘ã—p‚µ‚½‚Ù‚¤‚ª¸“x‚ªo‚éD
+double LGF(dcovector x,dcovector m,dcovector s);//å¯¾æ•°åŒ–ã—ãŸã‚¬ã‚¦ã‚¹é–¢æ•°ï¼Œä¸­å¿ƒmï¼Œå„æ¬¡å…ƒç‹¬ç«‹ã§æ¨™æº–åå·®sã®ã‚¬ã‚¦ã‚¹é–¢æ•°ã‚’logã«å…¥ã‚ŒãŸã‚‚ã®ï¼ã‚¬ã‚¦ã‚¹é–¢æ•°ã®ã‹ã‘ç®—ã‚’ã‚„ã‚‹éš›ãªã©ã«ï¼Œå¯¾æ•°ç©ºé–“å†…ã§å’Œç®—ã§ä»£ç”¨ã—ãŸã»ã†ãŒç²¾åº¦ãŒå‡ºã‚‹ï¼
 double LGF(dcovector x, dcovector m,dgematrix q); //
 double LGF(dcovector x, dcovector m,dgematrix iq,double detq);
 
 
-dcovector ng_calculation(dcovector *m,dcovector *s,int N,dcovector x);//•¡”‚ÌƒKƒEƒX•ª•z‚Ì’†SC•W€•Î·CƒKƒEƒX•ª•z‚Ì”N‚ğ“n‚·‚±‚Æ‚Å³‹K‰»ƒKƒEƒXŠÖ”(NGnet)‚Ìo—Í‚ğo‚·Do—Í‚ÍŠeŠî’ê‚©‚ç‚Ìo—Í’l
-dcovector rbf_calculation(dcovector *m,dcovector *s,int N,dcovector x);//ã‚Ì‚q‚a‚e”Å
+dcovector ng_calculation(dcovector *m,dcovector *s,int N,dcovector x);//è¤‡æ•°ã®ã‚¬ã‚¦ã‚¹åˆ†å¸ƒã®ä¸­å¿ƒï¼Œæ¨™æº–åå·®ï¼Œã‚¬ã‚¦ã‚¹åˆ†å¸ƒã®æ•°Nã‚’æ¸¡ã™ã“ã¨ã§æ­£è¦åŒ–ã‚¬ã‚¦ã‚¹é–¢æ•°(NGnet)ã®å‡ºåŠ›ã‚’å‡ºã™ï¼å‡ºåŠ›ã¯å„åŸºåº•ã‹ã‚‰ã®å‡ºåŠ›å€¤
+dcovector rbf_calculation(dcovector *m,dcovector *s,int N,dcovector x);//ä¸Šã®ï¼²ï¼¢ï¼¦ç‰ˆ
 
-void restrict(dcovector &v, double min,double max);//ƒxƒNƒgƒ‹‚Ì’l‚ğmin,max‚ÌŠÔ‚É§ŒÀ‚·‚éiŠO‚ê’lˆ—‚È‚Ç‚Éj
-void restrict(drovector &v, double min,double max);//ƒxƒNƒgƒ‹‚Ì’l‚ğmin,max‚ÌŠÔ‚É§ŒÀ‚·‚é
-void restrict(dgematrix& A,double min,double max);//s—ñ‚Ì’l‚ğmin,max‚ÌŠÔ‚É§ŒÀ‚·‚é
-void  each_square(dcovector &v);//ŠeŸŒ³‚É‚Â‚¢‚Ä©æ‚·‚éD
-void  each_abs(dcovector &v);//ŠeŸŒ³‚É‚Â‚¢‚Äâ‘Î’l‚ğ—^‚¦‚éD
-void scatter();//—”‰Šú‰»@ŠÔŠÖ”‚ğŒÄ‚Ño‚µ‚ÄrandŠÖ”‚ğ‰Šú‰»‚·‚éDƒvƒƒOƒ‰ƒ€‚Ìˆê”Ôn‚ß‚Å‚Æ‚è‚ ‚¦‚¸ŒÄ‚Ô‚×‚µD
+void restrict(dcovector &v, double min,double max);//ãƒ™ã‚¯ãƒˆãƒ«ã®å€¤ã‚’min,maxã®é–“ã«åˆ¶é™ã™ã‚‹ï¼ˆå¤–ã‚Œå€¤å‡¦ç†ãªã©ã«ï¼‰
+void restrict(drovector &v, double min,double max);//ãƒ™ã‚¯ãƒˆãƒ«ã®å€¤ã‚’min,maxã®é–“ã«åˆ¶é™ã™ã‚‹
+void restrict(dgematrix& A,double min,double max);//è¡Œåˆ—ã®å€¤ã‚’min,maxã®é–“ã«åˆ¶é™ã™ã‚‹
+void  each_square(dcovector &v);//å„æ¬¡å…ƒã«ã¤ã„ã¦è‡ªä¹—ã™ã‚‹ï¼
+void  each_abs(dcovector &v);//å„æ¬¡å…ƒã«ã¤ã„ã¦çµ¶å¯¾å€¤ã‚’ä¸ãˆã‚‹ï¼
+void scatter();//ä¹±æ•°åˆæœŸåŒ–ã€€æ™‚é–“é–¢æ•°ã‚’å‘¼ã³å‡ºã—ã¦randé–¢æ•°ã‚’åˆæœŸåŒ–ã™ã‚‹ï¼ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®ä¸€ç•ªå§‹ã‚ã§ã¨ã‚Šã‚ãˆãšå‘¼ã¶ã¹ã—ï¼
 
-double frobnorm(dgematrix A);//s—ñ‚ÌƒtƒƒxƒjƒEƒXƒmƒ‹ƒ€‚ğŒvZ
-double trace(dgematrix A);//s—ñ‚ÌƒgƒŒ[ƒX‚ğŒvZ
+double frobnorm(dgematrix A);//è¡Œåˆ—ã®ãƒ•ãƒ­ãƒ™ãƒ‹ã‚¦ã‚¹ãƒãƒ«ãƒ ã‚’è¨ˆç®—
+double trace(dgematrix A);//è¡Œåˆ—ã®ãƒˆãƒ¬ãƒ¼ã‚¹ã‚’è¨ˆç®—
 
-void read_multi_vector(dcovector *x,int num, int dim, char *filename);//ƒtƒ@ƒCƒ‹‚©‚ç•¡”‚ÌƒxƒNƒgƒ‹‚ğ“Ç‚İæ‚éD
-void read_multi_vector(drovector *x,int num, int dim, char *filename);//ƒtƒ@ƒCƒ‹‚©‚ç•¡”‚ÌƒxƒNƒgƒ‹‚ğ“Ç‚İæ‚éD
-void read_multi_matrix(char *filename,dgematrix *A,int n);//ƒtƒ@ƒCƒ‹‚©‚ç•¡”‚Ìs—ñ‚ğ“Ç‚İæ‚éD
+void read_multi_vector(dcovector *x,int num, int dim, char *filename);//ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰è¤‡æ•°ã®ãƒ™ã‚¯ãƒˆãƒ«ã‚’èª­ã¿å–ã‚‹ï¼
+void read_multi_vector(drovector *x,int num, int dim, char *filename);//ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰è¤‡æ•°ã®ãƒ™ã‚¯ãƒˆãƒ«ã‚’èª­ã¿å–ã‚‹ï¼
+void read_multi_matrix(char *filename,dgematrix *A,int n);//ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰è¤‡æ•°ã®è¡Œåˆ—ã‚’èª­ã¿å–ã‚‹ï¼
 
 
-dgematrix product(dcovector c,drovector r);//—ñƒxƒNƒgƒ‹‚ÆsƒxƒNƒgƒ‹‚ÌÏ‚Ås—ñ‚ğ‘¢‚éD
+dgematrix product(dcovector c,drovector r);//åˆ—ãƒ™ã‚¯ãƒˆãƒ«ã¨è¡Œãƒ™ã‚¯ãƒˆãƒ«ã®ç©ã§è¡Œåˆ—ã‚’é€ ã‚‹ï¼
 //dgematrix sup::operator*(dcovector c,drovector r);
 
-void vec_set(dgematrix &A, int k , dcovector x); // s—ñ‚Ìˆê•”‚ÉƒxƒNƒgƒ‹‚ğƒZƒbƒg
+void vec_set(dgematrix &A, int k , dcovector x); // è¡Œåˆ—ã®ä¸€éƒ¨ã«ãƒ™ã‚¯ãƒˆãƒ«ã‚’ã‚»ãƒƒãƒˆ
 
 void vec_set(dgematrix &A, int k , drovector x);
 dcovector covec_read(dgematrix A, int k);
 drovector rovec_read(dgematrix A, int k);
 
-int ProbSelect(dcovector v);//ŠeŸŒ³‚Ì’l‚ğŠm—¦‚ÆŒ©‚È‚µC‚»‚ÌŠm—¦‚É‰ˆ‚Á‚ÄƒTƒCƒRƒ‚ğU‚èŸŒ³‚ğ‘I‘ğ‚·‚éD
+int ProbSelect(dcovector v);//å„æ¬¡å…ƒã®å€¤ã‚’ç¢ºç‡ã¨è¦‹ãªã—ï¼Œãã®ç¢ºç‡ã«æ²¿ã£ã¦ã‚µã‚¤ã‚³ãƒ­ã‚’æŒ¯ã‚Šæ¬¡å…ƒã‚’é¸æŠã™ã‚‹ï¼
 
-double max_value(dcovector v);//ŠeŸŒ³’l‚Ì’†‚Ì‚ÌÅ‘å’l‚ğ•Ô‚·D
-double min_value(dcovector v);//ŠeŸŒ³’l‚Ì’†‚ÌÅ¬’l‚ğ•Ô‚·
-int argmax(dcovector v);//Å‘å’l‚ğ‚ÂŸŒ³‚ğ•Ô‚·
-int argmin(dcovector v);//Å¬’l‚ğ‚ÂŸŒ³‚ğ•Ô‚·
+double max_value(dcovector v);//å„æ¬¡å…ƒå€¤ã®ä¸­ã®ã®æœ€å¤§å€¤ã‚’è¿”ã™ï¼
+double min_value(dcovector v);//å„æ¬¡å…ƒå€¤ã®ä¸­ã®æœ€å°å€¤ã‚’è¿”ã™
+int argmax(dcovector v);//æœ€å¤§å€¤ã‚’æŒã¤æ¬¡å…ƒã‚’è¿”ã™
+int argmin(dcovector v);//æœ€å°å€¤ã‚’æŒã¤æ¬¡å…ƒã‚’è¿”ã™
 dcovector argmax_vector(dcovector v);//
 dcovector argmin_vector(dcovector v);
-dcovector e_greedy(dcovector a,double greedy_ratio);//ProbSlect‚Ìe-greedy”ÅCÅ‘å’l‚ğ‚ÂŸŒ³‚ğ1-(N-1)e‚ÌŠm—¦C‘¼‚ğe=greedy_ratio‚ÌŠm—¦‚Å‘I‘ğD
+dcovector e_greedy(dcovector a,double greedy_ratio);//ProbSlectã®e-greedyç‰ˆï¼Œæœ€å¤§å€¤ã‚’æŒã¤æ¬¡å…ƒã‚’1-(N-1)eã®ç¢ºç‡ï¼Œä»–ã‚’e=greedy_ratioã®ç¢ºç‡ã§é¸æŠï¼
 
 
-dcovector normalize(dcovector x);//x‚ğŠeŸŒ³‚Ì˜a‚ª‚P‚É‚È‚é‚æ‚¤‚É³‹K‰»‚·‚éD
+dcovector normalize(dcovector x);//xã‚’å„æ¬¡å…ƒã®å’ŒãŒï¼‘ã«ãªã‚‹ã‚ˆã†ã«æ­£è¦åŒ–ã™ã‚‹ï¼
 dcovector each_product(dcovector a,dcovector b);//
-double det(dgematrix q); //s—ñ®‚ğ•Ô‚·
+double det(dgematrix q); //è¡Œåˆ—å¼ã‚’è¿”ã™
 double gaussian(dcovector x, dcovector m,dgematrix q); //
 double gaussian(dcovector x, dcovector m,dgematrix iq,double detq);
 
-double norm2(dcovector x);//“ñæƒmƒ‹ƒ€‚ğ•Ô‚·
+double norm2(dcovector x);//äºŒä¹—ãƒãƒ«ãƒ ã‚’è¿”ã™
 
 
 //dgematrix inv(dgematrix A);
 
-string csv(dcovector x);//csv‚ÌŒ`®‚Ì•¶š—ñ‚Éo—Í‚·‚éD fout << csv(X) <<endl;‚Æ‚¢‚Á‚½g‚¢•û
-string csv(drovector x);//“¯ã
-string csv(dgematrix x);//“¯ã
+string csv(dcovector x);//csvã®å½¢å¼ã®æ–‡å­—åˆ—ã«å‡ºåŠ›ã™ã‚‹ï¼ fout << csv(X) <<endl;ã¨ã„ã£ãŸä½¿ã„æ–¹
+string csv(drovector x);//åŒä¸Š
+string csv(dgematrix x);//åŒä¸Š
 
-void self_add(dgematrix &A,dgematrix B);//selfƒVƒŠ[ƒY‚Í‰‰Zq‚ğ—p‚¢‚¸C©‚ç‚ÉŒvZŒ‹‰Ê‚ğ‘ã“ü‚·‚éD
-void self_add(dcovector &x,dcovector y);//‘½­‚Ì‘¬“xŒüã‚ÍŠú‘Ò‚Å‚«‚é‚©‚à‚µ‚ê‚È‚¢‚ª
-void self_set(dgematrix &A,dgematrix B);//‚»‚ñ‚È‚É—˜—p‰¿’l‚Í‚È‚¢D
+void self_add(dgematrix &A,dgematrix B);//selfã‚·ãƒªãƒ¼ã‚ºã¯æ¼”ç®—å­ã‚’ç”¨ã„ãšï¼Œè‡ªã‚‰ã«è¨ˆç®—çµæœã‚’ä»£å…¥ã™ã‚‹ï¼
+void self_add(dcovector &x,dcovector y);//å¤šå°‘ã®é€Ÿåº¦å‘ä¸Šã¯æœŸå¾…ã§ãã‚‹ã‹ã‚‚ã—ã‚Œãªã„ãŒ
+void self_set(dgematrix &A,dgematrix B);//ãã‚“ãªã«åˆ©ç”¨ä¾¡å€¤ã¯ãªã„ï¼
 void self_set(dcovector &x,dcovector y);//
 
 
-void all_set(dgematrix &x,double value);//s—ñ‚Ì‘S¬•ª‚ğvalue‚ÉƒZƒbƒg
-void all_set(dcovector &x,double value);//s—ñ‚Ì‘S¬•ª‚Ìvalue‚ÉƒZƒbƒg
+void all_set(dgematrix &x,double value);//è¡Œåˆ—ã®å…¨æˆåˆ†ã‚’valueã«ã‚»ãƒƒãƒˆ
+void all_set(dcovector &x,double value);//è¡Œåˆ—ã®å…¨æˆåˆ†ã®valueã«ã‚»ãƒƒãƒˆ
 
 dgematrix submatrix(dgematrix A, int L, int R, int T, int B);
 
@@ -136,3 +136,48 @@ dgematrix lean_on (dgematrix A, dgematrix B);
 dgematrix put_on (dgematrix A, dgematrix B);
 
 //dgematrix operator = (dcovector v);
+
+
+
+///////routines used in Hamahata's sticky-HDP-HMM program
+
+//--------------------------------------------------------
+//-------------------------é–¢æ•°----------------------------
+//--------------------------------------------------------
+//è¡Œåˆ—ã«ãƒ™ã‚¯ãƒˆãƒ«ã‚’æŒ¿å…¥
+dgematrix Insert_mat(dgematrix mat,int col,dcovector vec);
+//è¡Œåˆ—ã‹ã‚‰ãƒ™ã‚¯ãƒˆãƒ«ã‚’æŠ½å‡º
+dcovector Extract_vec(dgematrix mat,int col);
+//ãƒ™ã‚¯ãƒˆãƒ«ã®ãƒãƒ«ãƒ ã‚’è¨ˆç®—
+double Cal_norm(dcovector vec);
+//è¡Œåˆ—ã«ãƒ™ã‚¯ãƒˆãƒ«ã‚’æŒ¿å…¥ã—ã¦è¶³ã—åˆã‚ã›ã‚‹
+dgematrix InsertAdd_VecToMat(dgematrix mat,int col,dcovector vec);
+
+//æ­£å‰‡è¡Œåˆ—ã‹ã©ã†ã‹ã®ãƒã‚§ãƒƒã‚¯ï¼ˆæ­£å‰‡ãªã‚‰0ã‚’è¿”ã™ï¼‰
+int check_Regularization(dgematrix mat);
+
+
+//å¤šæ¬¡å…ƒæ­£è¦åˆ†å¸ƒã®å°¤åº¦ã‚’è¨ˆç®—
+double Cal_MultiNormLikely(dcovector x,dcovector mu,dgematrix sig);
+//ã‚³ãƒ¬ã‚¹ã‚­ãƒ¼åˆ†è§£
+dgematrix cholesky(dgematrix mat);
+
+
+
+//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°é–¢é€£
+//å¤šæ¬¡å…ƒã‚¬ã‚¦ã‚¹åˆ†å¸ƒã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+dcovector MultiGaussSampler(dcovector Mu,dgematrix Sig);
+//1æ¬¡å…ƒã‚¬ã‚¦ã‚¹åˆ†å¸ƒã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+double SingleGaussSampler(double mu,double sig);
+//1æ¬¡å…ƒé€†ã‚¬ãƒ³ãƒåˆ†å¸ƒã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+double SingleInvGammaSampler(double kappa,double lambda);
+//å¤šé …åˆ†å¸ƒã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+int MultiNominalSampler(dcovector v);
+//ãƒ‡ã‚£ãƒªã‚¯ãƒ¬åˆ†å¸ƒã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+dcovector DirichletSampler(dcovector vec);
+//2é …åˆ†å¸ƒã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+int BinominalSampler(int n,double p);
+//é€†Wishartåˆ†å¸ƒã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+dgematrix IWishartSampler(double n,dgematrix S);
+
+
