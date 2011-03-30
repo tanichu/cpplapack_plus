@@ -179,5 +179,6 @@ dcovector DirichletSampler(dcovector vec);
 int BinominalSampler(int n,double p);
 //逆Wishart分布からサンプリング
 dgematrix IWishartSampler(double n,dgematrix S);
-
+// in this inverse wishart sampler S is covariance matrix NOT PRECION!!
+// Take care about this 
 

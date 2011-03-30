@@ -20,6 +20,13 @@ int main(){
   cout << gennor(1,1) << endl;
 
 
+  dgematrix A(2,2); A.identity();
+  cout << IWishartSampler(3,A) << endl; 
+ cout << IWishartSampler(3,10*A) << endl; 
+ cout << IWishartSampler(3,100*A) << endl;
+ cout << IWishartSampler(3,1000*A) << endl;
+ cout << IWishartSampler(3,10000*A) << endl;
+
 
   return 0;
 }
