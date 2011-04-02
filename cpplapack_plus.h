@@ -179,6 +179,100 @@ dcovector DirichletSampler(dcovector vec);
 int BinominalSampler(int n,double p);
 //逆Wishart分布からサンプリング
 dgematrix IWishartSampler(double n,dgematrix S);
-// in this inverse wishart sampler S is covariance matrix NOT PRECION!!
-// Take care about this 
+
+
+
+///NBHmm 開発時に導入
+dcovector dco(vector<int> v);
+void dge_resize(dgematrix *X, int m, int n,int number );
+
+drovector sum_to_dro(dgematrix X);
+
+dgematrix diag(dcovector x);
+	
+dgematrix ExtractMatrixByIndex(dgematrix X, vector<int> index, int key);
+
+dcovector direct_sum(dcovector x , double y);
+double sum(dcovector x);
+dgematrix TransitionCount(vector<int> s, int states);
+
+
+dcovector subvector(dcovector x, int l);
+drovector subvector(drovector x, int l);
+
+
+
+
+	
+
+#define DEFAULT_HP_ALPHA 0.1 
+class NBMulti{
+	
+public:
+	dcovector Mu;
+	
+	dcovector UpdateMu(dcovector count);
+	int Sampler();
+	void resize(int k);
+	
+	double Probability(int i);
+	//Hyperparameters                                                             
+	dcovector hp_alpha;
+	
+};
+
+	
+
+	
+class NBGauss{
+	
+public:
+	dcovector Mu;
+	dgematrix Sig;
+	
+	dcovector UpdateMu(dgematrix X);
+	dgematrix UpdateSig(dgematrix X);
+	dcovector Sampler();
+	
+	double Probability(dcovector x); 
+	
+	void resize(int k);
+	//Hyperparameters                                                             
+	//for mean                                                                   
+	dcovector hp_m;
+	dgematrix hp_S;
+	// for variance                                                               
+	double hp_n;
+	dgematrix hp_A;
+	
+};
+
+//NBHmm  Forwardfiltering - Backward sampling のBayseHMM
+class NBHmm  {
+public:
+	vector<NBGauss> G;//Gaussian distribution
+	vector<NBMulti> M;// Transition multinomial distribution
+	
+	void resize(int num_states, int dim_output);
+	dgematrix TM_buffer; // used to buffering TM for reducing repetedly estimation of TM.
+	dgematrix TM();// shows transition matrix
+	
+	
+	void Update(dgematrix Y,vector<int> label);
+	
+	void read_Mu(const char *filename);
+	void read_diag_Sig(const char *filename);
+	
+	void read_TM(const char *filename);// read TM from file
+};
+
+
+
+
+
+dgematrix ForwardFiltering(NBHmm H, dgematrix X);
+vector<int> BackwardSampling(NBHmm H,dgematrix F);
+vector<int> GenerateStates(NBHmm H, int length, int initial_state);
+dgematrix GenerateObservations(NBHmm H, vector<int> s);
+
 

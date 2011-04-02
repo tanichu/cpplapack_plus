@@ -930,9 +930,10 @@ int BinominalSampler(int n,double p)
 //逆Wishart分布からサンプリング
 //パラメータは自由度n,精度行列S
 //入力を分散投入に変更2010/10/06taniguchi
+//実際には間違っていなかったので，戻す．2011/3/31
 dgematrix IWishartSampler(double n,dgematrix S)
 {
-	//S = CPPL::i(S); //precision to covariance
+  S = CPPL::i(S); //precision to covariance
 	dgematrix z(S.m,S.m);z.zero();
 	dcovector c(S.m);c.zero();
 	dgematrix R(S.m,S.m);R.zero();
@@ -957,3 +958,367 @@ dgematrix IWishartSampler(double n,dgematrix S)
 	dgematrix D = CPPL::t(C) * X * C;
 	return (CPPL::i(D));
 }
+
+/*
+dgematrix IWSample(double n, dgematrix A){
+  return (IWishartSampler(n,i(A)));
+}
+*/
+
+void dge_resize(dgematrix *X, int m, int n,int number ){
+	for(int i =0;i<number ;i++){
+		X[i].resize(m,n);
+		X[i].identity();
+	}
+}
+
+
+
+drovector sum_to_dro(dgematrix X){
+	drovector temp(X.n);
+	temp.zero();
+	for(int i=0;i<X.m;i++){
+		temp+=rovec_read(X,i);
+	}
+	
+	return temp;
+}
+
+
+//NBGauss // Gaussian
+
+void NBGauss::resize(int k){
+	Mu.resize(k);Mu.zero();
+	Sig.resize(k,k);Sig.identity();
+	hp_m.resize(k);hp_m.zero();
+	hp_S.resize(k,k);hp_S.identity();
+	hp_n = 1;
+	hp_A.resize(k,k);hp_A.identity();
+}
+
+dcovector NBGauss::Sampler(){
+	return MultiGaussSampler(Mu,Sig);
+	
+}
+
+double NBGauss::Probability(dcovector x){
+	return Cal_MultiNormLikely(x,Mu,Sig);
+}
+
+
+
+dcovector NBGauss::UpdateMu(dgematrix X){
+	
+	dgematrix Sig_bar = i(i(hp_S) + X.m*i(Sig));
+	dcovector musum = (i(hp_S)*hp_m + i(Sig)*t(sum_to_dro(X)));
+	
+	dcovector Mu_bar = Sig_bar*musum;
+	
+	Mu = MultiGaussSampler(Mu_bar,Sig_bar);
+	return Mu;
+}
+
+dgematrix NBGauss::UpdateSig(dgematrix X){
+	
+	double nu = hp_n+X.m;
+	
+	dgematrix mean_matrix(X.m,X.n);
+	
+	for (int i=0;i<X.m; i++) {
+		drovector tMu = t(Mu);
+		vec_set(mean_matrix,i,tMu);
+	}
+	
+	//cout << mean_matrix << endl;
+	
+	dgematrix Y  = X - mean_matrix; 
+	
+	dgematrix Delta = hp_A + t(Y)*Y;
+	
+	Sig = IWishartSampler(nu,Delta);
+	return Sig;
+}
+
+
+
+/// NBMulit // 多項分布
+
+void NBMulti::resize(int k){
+	Mu.resize(k);all_set(Mu,1.0/double(k));
+	hp_alpha.resize(k);all_set(hp_alpha,DEFAULT_HP_ALPHA);
+}
+
+double NBMulti::Probability(int i){
+	return Mu(i);
+}
+
+int NBMulti::Sampler(){
+	return MultiNominalSampler(Mu);
+}
+
+dcovector NBMulti::UpdateMu(dcovector count_vec){
+	
+	Mu = DirichletSampler(count_vec + hp_alpha);
+	return Mu;
+}
+
+
+//index とkeyが一致している行だけをとりだして，make matrix 
+dgematrix ExtractMatrixByIndex(dgematrix X, vector<int> index, int key){
+	
+	int count=0;
+	
+	for(int i=0;i<X.m;i++){
+		if(index[i]==key){
+			count++;
+		}
+	}
+	
+	dgematrix Y(count,X.n);
+	
+	count=0;
+	for(int i=0;i<X.m;i++){
+		if(index[i]==key){
+			vec_set(Y,count,rovec_read(X,i));
+			count++;
+		}
+	}
+	
+	
+	return Y;
+}
+
+
+
+
+
+void NBHmm::read_TM(const char *filename){
+	dgematrix mat;
+	mat.read(filename);
+	
+	for (int i=0; i<M.size(); i++) {
+		M[i].Mu = covec_read(mat,i);
+	}
+	
+	TM();
+	
+}
+
+// filename has each Mu as a drovector
+// 
+void NBHmm::read_Mu(const char *filename){
+	dgematrix mat;
+	mat.read(filename);
+	
+	for (int i=0; i<G.size(); i++) {
+		G[i].Mu = t(rovec_read(mat,i));
+	}
+	
+}
+
+
+dgematrix diag(dcovector x){
+	dgematrix mat(x.l,x.l);
+	
+	mat.identity();
+	for (int i=0; i<x.l; i++) {
+		mat(i,i) = x(i);
+	}
+	
+	return mat;
+	
+}
+
+
+// filename has Sig's diag elements
+// as drovectors 
+void NBHmm::read_diag_Sig(const	char *filename){
+	dgematrix mat;
+	mat.read(filename);
+	
+	for (int i=0; i<G.size(); i++) {
+		G[i].Sig = diag(t(rovec_read(mat,i)));	}
+}
+
+dgematrix NBHmm::TM(){
+	dgematrix tm(M.size(),M.size());
+	for (int i=0; i< M.size(); i++) {
+		vec_set(tm,i,M[i].Mu);
+	}
+	
+	TM_buffer = tm;
+	return tm;
+}
+
+void NBHmm::resize(int n/*num_states*/,int d/*dim_output*/){
+	//Gaussian
+	G.resize(n);
+	for (int i=0; i<n ; i++) {
+		G[i].resize(d);
+	}
+	//Transition Matrix : Multinomial distribution 
+	M.resize(n);
+	for (int i=0; i<n ; i++) {
+		M[i].resize(n);
+	}
+	
+	
+};
+
+
+dcovector direct_sum(dcovector x , double y){
+	dcovector v;v.resize(x.l+1);
+	for (int i=0; i<x.l; i++) {
+		v(i) = x(i);
+	}
+	v(x.l) = y;
+	
+	return v;
+	
+}
+
+double sum(dcovector x){
+	double a = 0;
+	for (int i=0; i<x.l; i++) {
+		a+= x(i);
+	}
+	return a;
+}
+
+// additional column is introduced
+dgematrix ForwardFiltering(NBHmm H, dgematrix X){
+	
+	int num = H.M.size();
+	
+	double log_c_ = 0; 
+	
+	dgematrix F(X.m,num+1); // the last column is for baseline
+	F.zero();
+	
+	dcovector current(num);
+	drovector x = rovec_read(X,0);	
+	for (int i=0; i<num; i++) {
+		current(i) = H.G[i].Probability(t(x));
+	}
+	
+	
+	vec_set(F,0,t(direct_sum(current,1)));
+	
+	H.TM();
+	for(int j=1;j<X.m;j++){
+		current = H.TM_buffer*current;
+		x = rovec_read(X,j);
+		for (int i=0; i<current.l; i++) {
+			current(i) = H.G[i].Probability(t(x))*current(i);
+		}
+		double a = sum(current);
+		current = (1.0/a)*current;
+		log_c_ = log_c_ + log10(a);//similar to hamahata
+		vec_set(F,j,t(direct_sum(current,log_c_)));
+	}
+	
+	return F;
+}
+
+
+
+dcovector subvector(dcovector x, int l){
+	dcovector v(l);
+	for (int i=0; i<l; i++) {
+		v(i) = x(i);
+	}
+	return v;
+}
+drovector subvector(drovector x, int l){
+	drovector v(l);
+	for (int i=0; i<l; i++) {
+		v(i) = x(i);
+	}
+	return v;
+}
+
+
+vector<int> BackwardSampling(NBHmm H,dgematrix F){
+	
+	
+	vector<int> est;est.resize(F.m);
+	
+	dcovector current = subvector(t(rovec_read(F,F.m-1)),F.n-1);
+	est[F.m-1] = MultiNominalSampler(current);
+	
+	for (int i=F.m-1; i>0; i--) {
+		for (int k=0; k<F.n-1; k++) {
+			current(k) = F(i-1, k)*H.M[k].Probability(est[i]);
+		}
+		est[i-1] = MultiNominalSampler(current);
+	}
+	
+	return est;
+}
+
+
+
+vector<int> GenerateStates(NBHmm H, int length, int initial_state){
+	
+	vector<int> s; s.resize(length);
+	s[0] = initial_state;
+	for (int t=0; t<length-1; t++) {
+		s[t+1] = H.M[s[t]].Sampler();
+	}
+	
+	
+	return s;
+}
+
+
+dgematrix GenerateObservations(NBHmm H, vector<int> s){
+	
+	dgematrix Y(s.size(),H.G[0].Mu.l);
+	
+	for (int i=0; i<Y.m; i++) {
+		vec_set(Y,i,t(H.G[s[i]].Sampler()));
+	}
+	
+	
+	return Y;
+	
+}
+
+
+dcovector dco(vector<int> v){
+	dcovector x(v.size());
+	for (int i=0; i<x.l; i++) {
+		x(i) = v[i];
+	}
+	return x;
+	
+}
+
+dgematrix TransitionCount(vector<int> s, int states){
+	dgematrix mat(states,states);
+	mat.zero();
+	for (int i=0; i< s.size()-1; i++) {
+		mat(s[i+1],s[i])++;
+	}
+	return mat;
+}
+
+void NBHmm::Update(dgematrix Y, vector<int> label){
+	
+	dgematrix TC = TransitionCount(label,M.size());
+	int states = M.size();
+	for (int i=0; i<states; i++) {
+		//update Gaussians
+		dgematrix Yi = ExtractMatrixByIndex(Y,label,i);
+		G[i].UpdateMu(Yi);
+		G[i].UpdateSig(Yi);
+		//update Transition
+		M[i].UpdateMu(covec_read(TC,i));
+	}
+	
+}
+
+
+
+
+

@@ -1,31 +1,31 @@
 #include "cpplapack_plus.h"
 
 
+#define N 10
+
 int main(){
 
   scatter();
 
-  cout << gauss_rand() << endl;
+  dgematrix Sig(2,2); Sig.read("Sig.init.dat");
+  dcovector Mu(2); Mu.zero();
 
-  dcovector multi(4);
-
-  multi(0)=1;
-  multi(1)=2;
-  multi(2)=3;
-  multi(3)=4;
-
-  cout << ProbSelect(multi) << endl;
+  cout << Sig << endl;
 
 
-  cout << gennor(1,1) << endl;
+  dgematrix X(N,2);
 
+  for(int i=0;i<N;i++){
+    vec_set(X,i,t(MultiGaussSampler(Mu,Sig)));
+  }
 
-  dgematrix A(2,2); A.identity();
-  cout << IWishartSampler(3,A) << endl; 
- cout << IWishartSampler(3,10*A) << endl; 
- cout << IWishartSampler(3,100*A) << endl;
- cout << IWishartSampler(3,1000*A) << endl;
- cout << IWishartSampler(3,10000*A) << endl;
+  cout << X << endl;
+
+  dgematrix A = t(X)*X;
+
+  cout << (1.0/double(N)) * A << endl;
+
+  cout << IWishartSampler(N,A) << endl;
 
 
   return 0;
