@@ -9,6 +9,11 @@
 #define _USE_MATH_DEFINES 
 	
 #define PI 3.141592	
+
+
+#define DIR_MIN 1.0/(double)pow(10.0,20.0)// Dirchlet Sampler's lower bound for input
+// Heuristics  // Therefore, this is for lapping "randlib" 
+
 #include <string>
 #include <vector>
 #include <sstream>
@@ -18,6 +23,7 @@
 #include <cpplapack.h>//cpplapack
 #include <randlib.h> // randlib
 
+#include <clx/tokenizer.h>//clx
 
 #include <time.h>//時間関数利用　乱数初期化など
 //#include <conio.h>//コンソールで一時止めるgetch()を利用するため
@@ -26,7 +32,7 @@
 #include <fstream>//ファイルストリーム
 using namespace std;
 using namespace CPPL;
-
+using namespace clx;
 //自作の文字列変換用
 std::string itos(int n); // int -> string
 std::string ftos(double n);// float,double -> string
@@ -49,11 +55,13 @@ string DelTillComma(string str);// Return迄の文字列を消去
 //が存在します．数字と文字列の相互変換に使ってください．
 
 //void DEBUG_TRACE(string x);
-vector<string> split(const string& str, const string& delimiter);
+//vector<string> split(const string& str, const string& delimiter);
+//vector<string> split(char *str, char *delimiter);
 
 vector< vector<string> > csv_reader(const char *filename);
-vector< vector<string> > ssv_reader(const char *filename);
+//vector< vector<string> > ssv_reader(const char *filename);
 
+dgematrix csv_to_dgematrix(const char *filename,int have_column_name =0);
 
 
 
@@ -159,6 +167,8 @@ int check_Regularization(dgematrix mat);
 
 //多次元正規分布の尤度を計算
 double Cal_MultiNormLikely(dcovector x,dcovector mu,dgematrix sig);
+double Cal_MultiNormLikely_with_precision(dcovector x,dcovector mu,dgematrix i_sig);
+
 //コレスキー分解
 dgematrix cholesky(dgematrix mat);
 
@@ -229,6 +239,7 @@ class NBGauss{
 public:
 	dcovector Mu;
 	dgematrix Sig;
+	dgematrix iSig;
 	
 	dcovector UpdateMu(dgematrix X);
 	dgematrix UpdateSig(dgematrix X);
@@ -247,32 +258,18 @@ public:
 	
 };
 
-//NBHmm  Forwardfiltering - Backward sampling のBayseHMM
-class NBHmm  {
-public:
-	vector<NBGauss> G;//Gaussian distribution
-	vector<NBMulti> M;// Transition multinomial distribution
-	
-	void resize(int num_states, int dim_output);
-	dgematrix TM_buffer; // used to buffering TM for reducing repetedly estimation of TM.
-	dgematrix TM();// shows transition matrix
-	
-	
-	void Update(dgematrix Y,vector<int> label);
-	
-	void read_Mu(const char *filename);
-	void read_diag_Sig(const char *filename);
-	
-	void read_TM(const char *filename);// read TM from file
-};
+
+int Kronecker_delta(int j,int k);
+dcovector sum_to_dco(dgematrix X);
+
+int BernoulliSampler(double p);
+
+
+dgematrix submatrix_left(dgematrix x, int l);
+dcovector elemental_covector(dgematrix x, int l);
+int non_zero_count(drovector x); 
 
 
 
-
-
-dgematrix ForwardFiltering(NBHmm H, dgematrix X);
-vector<int> BackwardSampling(NBHmm H,dgematrix F);
-vector<int> GenerateStates(NBHmm H, int length, int initial_state);
-dgematrix GenerateObservations(NBHmm H, vector<int> s);
 
 

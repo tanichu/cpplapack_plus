@@ -86,7 +86,7 @@ string DelTillComma(string str){
 }
 
 
-vector<string> split(const string& str, const string& delimiter) {
+/*vector<string> split(const string& str, const string& delimiter) {
     // delimiter(2 文字以上も可) を空白に置換
     std::string item(str);    
     for(unsigned pos = item.find(delimiter); pos != string::npos; pos = item.find(delimiter, pos)) {
@@ -102,29 +102,91 @@ vector<string> split(const string& str, const string& delimiter) {
     }
 
     return result;
-}
+}*/
+/*
+#define MAX_LEN 1000
+vector<string> split(char *str, char *delim){
+	
+	int i, len;
+    
+	char *words[MAX_LEN];
+	char *cp;
+	cp = str;
+  	int count =0;
+	for (len = 0; len < MAX_LEN; len++) {
+        if ((words[len] = strtok(cp, delim)) == NULL)
+            break;
+        cp = NULL;
+		count++;
+    }
+	vector<string> sent; sent.resize(count);
+	for(int i=0;i<count;i++){
+		sent[i] = words[i];
+	}
+	return sent;
+	
+}*/
 
 
 //csvを読み取る．
-vector< vector<string> > csv_reader(const char *filename){
+/// linux で使えない？？？？？2011/04/07
+/*vector< vector<string> > csv_reader(const char *filename){
 	char ch[10000];
 	string str;
 	ifstream fin(filename);
 	vector< vector<string> > csv;
 
 	while(fin.getline(ch,10000)){//データの読み込み
-		str = ch;
+		tokenizer(ch);
 		vector<string> strs;
-		strs = split(str,",");
+		for(int i =0; i < tok.size(); i++){
+			strs.push_back(tok.at(i));
+		}
 		csv.push_back(strs);
 	}
 	fin.close();
 
 	return csv;
+}*/
+
+
+vector< vector<string> > csv_reader(const char *filename){
+	char ch[10000];
+	string str;
+	ifstream fin(filename);
+	vector< vector<string> > csv_;
+		
+	while(fin.getline(ch,10000)){//データの読み込み
+		clx::csv tok(ch);
+		vector<string> strs;
+		for(int i =0; i < tok.size(); i++){
+			strs.push_back(tok.at(i));
+		}
+		csv_.push_back(strs);
+	}
+	fin.close();
+		
+	return csv_;
 }
 
+dgematrix csv_to_dgematrix(const char *filename,int have_column_name ){
+	CSV_STRING csv_ = csv_reader(filename);
+		
+	dgematrix mat(csv_.size()-have_column_name,csv_[0].size());
+	mat.zero();
+	for (int i=have_column_name; i<csv_.size(); i++) {
+		for (int j=0; j<csv_[0].size(); j++) {
+			mat(i-have_column_name,j) = atof(csv_[i][j].c_str());
+		}
+	}
+	return mat;
+}
+
+
+
+
 //ssvを読み取る．space separated value
-vector< vector<string> > ssv_reader(const char *filename){
+/*vector< vector<string> > ssv_reader(const char *filename){
 	char ch[10000];
 	string str;
 	ifstream fin(filename);
@@ -133,14 +195,14 @@ vector< vector<string> > ssv_reader(const char *filename){
 	while(fin.getline(ch,10000)){//データの読み込み
 		str = ch;
 		vector<string> strs;
-		strs = split(str," ");
+		strs = split(ch," ");
 		csv.push_back(strs);
 	}
 	fin.close();
 
 	return csv;
 }	
-
+*/
 	
 ///元suplapack
 
@@ -775,6 +837,22 @@ double Cal_MultiNormLikely(dcovector x,dcovector mu,dgematrix sig)
 	return(ans);
 }
 
+double Cal_MultiNormLikely_with_precision(dcovector x,dcovector mu,dgematrix i_sig)
+{
+	dcovector y = x - mu;
+	double tmp1,tmp2;
+	double ans;
+	
+	tmp1 = pow(pow(2.0*PI,double(y.l)),0.5) / pow(det(i_sig),0.5);
+	
+	tmp2 = -0.5 * CPPL::t(y) * i_sig * y;
+	
+	ans = exp(tmp2) / tmp1;
+	if(ans == 0)
+		ans = 1.0 / pow(10.0,100.0);
+	
+	return(ans);
+}
 //コレスキー分解
 dgematrix cholesky(dgematrix mat)
 {
@@ -822,7 +900,15 @@ double SingleGaussSampler(double mu,double sig)
 //1次元逆ガンマ分布からサンプリング
 double SingleInvGammaSampler(double kappa,double lambda)
 {
-	return(1.0 / gengam(kappa,lambda));
+	if (lambda > 0) {
+		return(1.0 / gengam(kappa,lambda));
+	}
+	else {
+		///exception!!!!!!
+		cout << "fatal error in Single"<< endl;
+		return 1.0;
+	}
+
 }
 
 
@@ -891,6 +977,13 @@ int MultiNominalSampler(dcovector v)
 	return k;
 }
 
+
+//↓こんなものの温床になってる．
+// A or R nonpositive in GENGAM - abort!
+//A value:     1.000000E+00 R value:     0.000000E+00
+//hamahata also avoid this problem by itroducing 
+//　MINTMP the lower bound of vec(i);
+
 //Dirichlet分布からサンプリング
 dcovector DirichletSampler(dcovector vec)
 {
@@ -899,10 +992,11 @@ dcovector DirichletSampler(dcovector vec)
 	
 	for(int i=0;i<vec.l;i++)
     {
-		if(vec(i) != 0)
+		if(vec(i) > 0){
 			theta(i) = gengam(1.0,vec(i));
-		else
+		}else{
 			theta(i) = 0;
+		}
 		sum += theta(i);
     }
 	
@@ -933,7 +1027,7 @@ int BinominalSampler(int n,double p)
 //実際には間違っていなかったので，戻す．2011/3/31
 dgematrix IWishartSampler(double n,dgematrix S)
 {
-  S = CPPL::i(S); //precision to covariance
+	S = CPPL::i(S); //precision to covariance
 	dgematrix z(S.m,S.m);z.zero();
 	dcovector c(S.m);c.zero();
 	dgematrix R(S.m,S.m);R.zero();
@@ -956,6 +1050,11 @@ dgematrix IWishartSampler(double n,dgematrix S)
 	dgematrix X = R*CPPL::t(R);
 	dgematrix C = cholesky(S);
 	dgematrix D = CPPL::t(C) * X * C;
+	
+	if(check_Regularization(D)){
+		return IWishartSampler(n,S);
+	}
+	
 	return (CPPL::i(D));
 }
 
@@ -989,10 +1088,10 @@ drovector sum_to_dro(dgematrix X){
 
 void NBGauss::resize(int k){
 	Mu.resize(k);Mu.zero();
-	Sig.resize(k,k);Sig.identity();
+	Sig.resize(k,k);Sig.identity();iSig=CPPL::i(Sig);
 	hp_m.resize(k);hp_m.zero();
 	hp_S.resize(k,k);hp_S.identity();
-	hp_n = 1;
+	hp_n = k+1;///k+3;//dof is bigger than its dimention!!??
 	hp_A.resize(k,k);hp_A.identity();
 }
 
@@ -1009,9 +1108,15 @@ double NBGauss::Probability(dcovector x){
 
 dcovector NBGauss::UpdateMu(dgematrix X){
 	
+	//cout << "now updating Gauss Mu..." << endl;
 	dgematrix Sig_bar = i(i(hp_S) + X.m*i(Sig));
-	dcovector musum = (i(hp_S)*hp_m + i(Sig)*t(sum_to_dro(X)));
+	dcovector musum;
 	
+	if(X.m == 0){
+		musum = i(hp_S)*hp_m ;}
+	else{
+		musum = (i(hp_S)*hp_m + i(Sig)*t(sum_to_dro(X)));
+	}
 	dcovector Mu_bar = Sig_bar*musum;
 	
 	Mu = MultiGaussSampler(Mu_bar,Sig_bar);
@@ -1020,6 +1125,8 @@ dcovector NBGauss::UpdateMu(dgematrix X){
 
 dgematrix NBGauss::UpdateSig(dgematrix X){
 	
+	
+	//cout << "now updating Gauss Sig...." << endl;
 	double nu = hp_n+X.m;
 	
 	dgematrix mean_matrix(X.m,X.n);
@@ -1028,14 +1135,20 @@ dgematrix NBGauss::UpdateSig(dgematrix X){
 		drovector tMu = t(Mu);
 		vec_set(mean_matrix,i,tMu);
 	}
-	
-	//cout << mean_matrix << endl;
-	
+		
 	dgematrix Y  = X - mean_matrix; 
 	
-	dgematrix Delta = hp_A + t(Y)*Y;
+	dgematrix Delta;
+	if (Y.m == 0) {
+		 Delta = hp_A;
+	}else{
+		 Delta = hp_A + CPPL::t(Y)*Y;
+	}
+	//cout << check_Regularization(Delta) << endl;
+
 	
 	Sig = IWishartSampler(nu,Delta);
+	iSig = CPPL::i(Sig);
 	return Sig;
 }
 
@@ -1057,8 +1170,19 @@ int NBMulti::Sampler(){
 }
 
 dcovector NBMulti::UpdateMu(dcovector count_vec){
+	dcovector dir_seed = count_vec + hp_alpha;
+
+	//for lower bound of beta element (heuristics )
+	// DIR_MIN is defined in cpplapack_plus.h 
+	for (int i=0; i < dir_seed.l; i++) {
+		if (dir_seed(i)<DIR_MIN) {
+			dir_seed(i)=DIR_MIN;
+			//cout << "dir lower cut!!"<< endl;
+		}
+	}
 	
-	Mu = DirichletSampler(count_vec + hp_alpha);
+	
+	Mu = DirichletSampler(dir_seed);
 	return Mu;
 }
 
@@ -1091,32 +1215,6 @@ dgematrix ExtractMatrixByIndex(dgematrix X, vector<int> index, int key){
 
 
 
-
-void NBHmm::read_TM(const char *filename){
-	dgematrix mat;
-	mat.read(filename);
-	
-	for (int i=0; i<M.size(); i++) {
-		M[i].Mu = covec_read(mat,i);
-	}
-	
-	TM();
-	
-}
-
-// filename has each Mu as a drovector
-// 
-void NBHmm::read_Mu(const char *filename){
-	dgematrix mat;
-	mat.read(filename);
-	
-	for (int i=0; i<G.size(); i++) {
-		G[i].Mu = t(rovec_read(mat,i));
-	}
-	
-}
-
-
 dgematrix diag(dcovector x){
 	dgematrix mat(x.l,x.l);
 	
@@ -1128,43 +1226,6 @@ dgematrix diag(dcovector x){
 	return mat;
 	
 }
-
-
-// filename has Sig's diag elements
-// as drovectors 
-void NBHmm::read_diag_Sig(const	char *filename){
-	dgematrix mat;
-	mat.read(filename);
-	
-	for (int i=0; i<G.size(); i++) {
-		G[i].Sig = diag(t(rovec_read(mat,i)));	}
-}
-
-dgematrix NBHmm::TM(){
-	dgematrix tm(M.size(),M.size());
-	for (int i=0; i< M.size(); i++) {
-		vec_set(tm,i,M[i].Mu);
-	}
-	
-	TM_buffer = tm;
-	return tm;
-}
-
-void NBHmm::resize(int n/*num_states*/,int d/*dim_output*/){
-	//Gaussian
-	G.resize(n);
-	for (int i=0; i<n ; i++) {
-		G[i].resize(d);
-	}
-	//Transition Matrix : Multinomial distribution 
-	M.resize(n);
-	for (int i=0; i<n ; i++) {
-		M[i].resize(n);
-	}
-	
-	
-};
-
 
 dcovector direct_sum(dcovector x , double y){
 	dcovector v;v.resize(x.l+1);
@@ -1185,40 +1246,6 @@ double sum(dcovector x){
 	return a;
 }
 
-// additional column is introduced
-dgematrix ForwardFiltering(NBHmm H, dgematrix X){
-	
-	int num = H.M.size();
-	
-	double log_c_ = 0; 
-	
-	dgematrix F(X.m,num+1); // the last column is for baseline
-	F.zero();
-	
-	dcovector current(num);
-	drovector x = rovec_read(X,0);	
-	for (int i=0; i<num; i++) {
-		current(i) = H.G[i].Probability(t(x));
-	}
-	
-	
-	vec_set(F,0,t(direct_sum(current,1)));
-	
-	H.TM();
-	for(int j=1;j<X.m;j++){
-		current = H.TM_buffer*current;
-		x = rovec_read(X,j);
-		for (int i=0; i<current.l; i++) {
-			current(i) = H.G[i].Probability(t(x))*current(i);
-		}
-		double a = sum(current);
-		current = (1.0/a)*current;
-		log_c_ = log_c_ + log10(a);//similar to hamahata
-		vec_set(F,j,t(direct_sum(current,log_c_)));
-	}
-	
-	return F;
-}
 
 
 
@@ -1238,51 +1265,6 @@ drovector subvector(drovector x, int l){
 }
 
 
-vector<int> BackwardSampling(NBHmm H,dgematrix F){
-	
-	
-	vector<int> est;est.resize(F.m);
-	
-	dcovector current = subvector(t(rovec_read(F,F.m-1)),F.n-1);
-	est[F.m-1] = MultiNominalSampler(current);
-	
-	for (int i=F.m-1; i>0; i--) {
-		for (int k=0; k<F.n-1; k++) {
-			current(k) = F(i-1, k)*H.M[k].Probability(est[i]);
-		}
-		est[i-1] = MultiNominalSampler(current);
-	}
-	
-	return est;
-}
-
-
-
-vector<int> GenerateStates(NBHmm H, int length, int initial_state){
-	
-	vector<int> s; s.resize(length);
-	s[0] = initial_state;
-	for (int t=0; t<length-1; t++) {
-		s[t+1] = H.M[s[t]].Sampler();
-	}
-	
-	
-	return s;
-}
-
-
-dgematrix GenerateObservations(NBHmm H, vector<int> s){
-	
-	dgematrix Y(s.size(),H.G[0].Mu.l);
-	
-	for (int i=0; i<Y.m; i++) {
-		vec_set(Y,i,t(H.G[s[i]].Sampler()));
-	}
-	
-	
-	return Y;
-	
-}
 
 
 dcovector dco(vector<int> v){
@@ -1303,22 +1285,77 @@ dgematrix TransitionCount(vector<int> s, int states){
 	return mat;
 }
 
-void NBHmm::Update(dgematrix Y, vector<int> label){
-	
-	dgematrix TC = TransitionCount(label,M.size());
-	int states = M.size();
-	for (int i=0; i<states; i++) {
-		//update Gaussians
-		dgematrix Yi = ExtractMatrixByIndex(Y,label,i);
-		G[i].UpdateMu(Yi);
-		G[i].UpdateSig(Yi);
-		//update Transition
-		M[i].UpdateMu(covec_read(TC,i));
+
+
+int Kronecker_delta(int j,int k){
+	if(j==k){
+		return 1;
+	}else{
+		return 0;
 	}
+}
+
+
+
+
+dcovector sum_to_dco(dgematrix X){
+	dcovector v(X.m);
+	v.zero();
+	
+	for (int i=0; i<X.m; i++) {
+		for (int j=0; j<X.n; j++) {
+			v(i)+=X(i,j);
+		}
+	}
+	return v;
 	
 }
 
 
+
+// 表で1です．
+int BernoulliSampler(double p){
+	dcovector pp(2);
+	pp(0) = 1-p;
+	pp(1) = p;
+	return MultiNominalSampler(pp);
+}
+
+
+
+dgematrix submatrix_left(dgematrix x, int l){
+	dgematrix y(x.m,x.n-1);
+	
+	
+	for (int i=0; i<x.m; i++) {
+		for (int j=0; j<l; j++) {
+			y(i,j)=x(i,j);
+		}
+	}
+	return y;
+	
+}
+
+dcovector elemental_covector(dgematrix x, int l){
+	
+	dcovector v(x.m);
+	for (int i=0; i<x.m; i++) {
+		v(i) = x(i,l);
+	}
+	return v;
+}
+
+
+int non_zero_count(drovector x){
+	int count=0;
+		for (int i=0; i<x.l; i++) {
+			if (x(i)!=0) {
+				count++;
+			}
+		}
+	return count;
+	
+}
 
 
 

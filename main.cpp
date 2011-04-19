@@ -7,6 +7,19 @@ int main(){
 
   scatter();
 
+  dgematrix S(3,3);
+  S.identity();
+  dcovector m(3),x(3);
+  m.zero();
+  x(0)=0;x(1)=1;x(2)=2;
+  cout <<  Cal_MultiNormLikely_with_precision(x,m,i(S)) << endl;
+  cout <<  Cal_MultiNormLikely(x,m,S) << endl;
+
+
+
+
+  getchar();
+
   dgematrix Sig(2,2); Sig.read("Sig.init.dat");
   dcovector Mu(2); Mu.zero();
 
