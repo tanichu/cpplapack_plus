@@ -1101,9 +1101,12 @@ dcovector NBGauss::Sampler(){
 }
 
 double NBGauss::Probability(dcovector x){
-	return Cal_MultiNormLikely(x,Mu,Sig);
+	return Cal_MultiNormLikely_with_precision(x,Mu,iSig);
 }
 
+/*double NBGauss::Probability(dcovector x){
+	return Cal_MultiNormLikely_with_precision(x,Mu,iSig);
+}*/
 
 
 dcovector NBGauss::UpdateMu(dgematrix X){

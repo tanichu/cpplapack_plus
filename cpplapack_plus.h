@@ -244,7 +244,7 @@ public:
 	dcovector UpdateMu(dgematrix X);
 	dgematrix UpdateSig(dgematrix X);
 	dcovector Sampler();
-	
+		
 	double Probability(dcovector x); 
 	
 	void resize(int k);
